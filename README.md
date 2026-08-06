@@ -111,14 +111,12 @@ atlas-rv research \
   --provider fred \
   --config configs/fred_market_study.yml \
   --start 2021-01-01 \
-  --include-review \
   --output reports/fred_market_study
 ~~~
 
-The **--include-review** flag is intentional here: this is a broad diagnostic stress
-study showing both accepted and rejected hypotheses, not a claim that every sleeve
-is tradable. Several FRED inputs are indices, yields, spreads, or reference levels
-rather than executable total-return instruments.
+All eight hypotheses remain visible in diagnostics, but only relationships that pass
+the research gate enter the headline portfolio. Several FRED inputs are indices,
+yields, spreads, or reference levels rather than executable total-return instruments.
 
 ## Explore market-data proxies
 

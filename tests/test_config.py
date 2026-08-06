@@ -20,7 +20,7 @@ def test_loads_example_universe_and_v02_controls() -> None:
 def test_loads_fred_multi_asset_study() -> None:
     config = load_config(Path("configs/fred_market_study.yml"))
 
-    assert len(config.pairs) == 6
+    assert len(config.pairs) == 8
     assert {asset for pair in config.pairs for asset in pair.asset_classes} == {
         "commodity",
         "credit",

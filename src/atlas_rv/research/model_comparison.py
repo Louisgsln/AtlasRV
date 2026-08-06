@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 
 import pandas as pd
 
-from atlas_rv.backtest.engine import PairBacktestResult, PairBacktester
+from atlas_rv.backtest.engine import PairBacktester, PairBacktestResult
 from atlas_rv.config import PairConfig, StrategyConfig
 
 

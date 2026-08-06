@@ -163,7 +163,6 @@ class PairBacktester:
             positions=position,
         )
         metrics["total_transaction_cost"] = float(transaction_cost.sum())
-        metrics["gross_total_return"] = float(
-            (1.0 + gross_return.clip(lower=-0.999999)).prod() - 1.0
-        )
+        gross_growth = 1.0 + gross_return.clip(lower=-0.999999).to_numpy(dtype=float)
+        metrics["gross_total_return"] = float(np.prod(gross_growth) - 1.0)
         return PairBacktestResult(pair=pair, config=strategy, frame=frame, metrics=metrics)

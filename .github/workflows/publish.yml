@@ -60,7 +60,6 @@ jobs:
             --provider fred \
             --config configs/fred_market_study.yml \
             --start 2021-01-01 \
-            --include-review \
             --output "$STUDY_DIR"
 
       - name: Build the static dashboard

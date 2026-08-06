@@ -9,9 +9,9 @@ The study uses public observed FRED series across equity, rates, credit,
 volatility, FX, crypto, and commodities from 2021 onward. It runs the same causal
 walk-forward engine used by the deterministic benchmark.
 
-The publication command intentionally uses **--include-review**. This preserves
-failed diagnostics and stress-tests portfolio plumbing; it does not waive the
-statistical decisions shown in diagnostics.csv.
+The publication keeps failed hypotheses in diagnostics.csv while admitting only
+PASS relationships to the headline walk-forward portfolio. REVIEW decisions are
+therefore visible without contaminating the reported portfolio.
 
 Several inputs are indices, yields, spreads, or reference levels rather than
 executable total-return instruments. Costs are illustrative, calendars are mixed,
@@ -25,7 +25,6 @@ atlas-rv research \
   --provider fred \
   --config configs/fred_market_study.yml \
   --start 2021-01-01 \
-  --include-review \
   --output reports/fred_market_study
 ~~~
 

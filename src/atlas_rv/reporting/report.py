@@ -204,7 +204,7 @@ def write_research_bundle(
         },
         "regimes": {
             str(index): _serializable_metrics(
-                {key: float(value) for key, value in row.items()}
+                {str(key): float(value) for key, value in row.items()}
             )
             for index, row in regime_analysis.metrics.iterrows()
         },

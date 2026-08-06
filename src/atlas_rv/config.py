@@ -8,7 +8,6 @@ from typing import Any
 
 import yaml
 
-
 _HEDGE_MODELS = frozenset({"kalman", "rolling_ols", "expanding_ols"})
 
 
