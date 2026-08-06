@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "atlas-rv"
-version = "0.1.0"
-description = "A regime-aware cross-asset relative-value research and backtesting lab."
+version = "0.2.0"
+description = "A causal, regime-aware cross-asset relative-value research platform."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -16,14 +16,16 @@ keywords = [
   "pairs-trading",
   "backtesting",
   "cross-asset",
+  "portfolio-risk",
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Financial and Insurance Industry",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Office/Business :: Financial :: Investment",
 ]
 dependencies = [
@@ -39,11 +41,14 @@ dependencies = [
 data = ["yfinance>=0.2.54"]
 dashboard = ["plotly>=5.24", "streamlit>=1.41"]
 dev = [
+  "build>=1.2",
   "mypy>=1.13,<2.0",
   "pandas-stubs>=2.2",
+  "pre-commit>=4.0",
   "pytest>=8.3",
   "pytest-cov>=6.0",
   "ruff>=0.8",
+  "twine>=5.1",
   "types-PyYAML>=6.0",
 ]
 

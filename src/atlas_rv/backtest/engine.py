@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 
 from atlas_rv.config import PairConfig, StrategyConfig
-from atlas_rv.models.kalman import KalmanDynamicRegression
+from atlas_rv.execution.costs import ExecutionCostModel
+from atlas_rv.models.regression import fit_hedge_model
 from atlas_rv.risk.metrics import drawdown_series, performance_metrics
 from atlas_rv.signals.relative_value import generate_positions, rolling_zscore
 
@@ -22,15 +23,7 @@ class PairBacktestResult:
 
 
 class PairBacktester:
-    """Backtest one dynamic relative-value relationship.
-
-    Timing convention
-    -----------------
-    Prices observed at close ``t`` update the model and produce target weights.
-    Those weights earn the return from close ``t`` to close ``t+1``. Costs are
-    charged when the new weights become active. Every model input is therefore
-    available before the return it is used to trade.
-    """
+    """Backtest one dynamic relative-value relationship with next-bar execution."""
 
     def __init__(self, annualization: int = 252) -> None:
         if annualization <= 0:
@@ -49,7 +42,16 @@ class PairBacktester:
             raise KeyError(f"Missing pair instruments: {', '.join(missing)}")
 
         aligned = prices[[pair.y, pair.x]].dropna().astype(float).sort_index()
-        minimum_rows = max(strategy.zscore_lookback + 20, strategy.volatility_lookback + 20)
+        required_model_rows = (
+            strategy.rolling_ols_lookback
+            if strategy.hedge_model == "rolling_ols"
+            else 0
+        )
+        minimum_rows = max(
+            strategy.zscore_lookback + 20,
+            strategy.volatility_lookback + 20,
+            required_model_rows + 20,
+        )
         if len(aligned) < minimum_rows:
             raise ValueError(f"Pair backtest requires at least {minimum_rows} aligned rows")
         if (aligned <= 0.0).any(axis=None):
@@ -62,10 +64,14 @@ class PairBacktester:
             index=aligned.index,
             columns=aligned.columns,
         )
-        model = KalmanDynamicRegression(
-            delta=strategy.kalman_delta,
+        model = fit_hedge_model(
+            log_prices[pair.y],
+            log_prices[pair.x],
+            model=strategy.hedge_model,
+            kalman_delta=strategy.kalman_delta,
             observation_variance=strategy.observation_variance,
-        ).fit(log_prices[pair.y], log_prices[pair.x])
+            rolling_ols_lookback=strategy.rolling_ols_lookback,
+        )
         zscore = rolling_zscore(model.innovation, strategy.zscore_lookback)
         position = generate_positions(
             zscore,
@@ -110,11 +116,21 @@ class PairBacktester:
             + held_weights["weight_x"] * asset_returns[pair.x]
         ).rename("gross_return")
 
-        turnover = scaled_targets.diff().abs().sum(axis=1).shift(1).fillna(0.0)
-        turnover.name = "turnover"
-        transaction_cost = (turnover * strategy.cost_bps / 10_000.0).rename(
-            "transaction_cost"
+        cost_breakdown = ExecutionCostModel(
+            legacy_cost_bps=strategy.cost_bps,
+            commission_bps=strategy.commission_bps,
+            half_spread_bps=strategy.half_spread_bps,
+            slippage_bps=strategy.slippage_bps,
+            impact_coefficient_bps=strategy.impact_coefficient_bps,
+            borrow_rate_bps_annual=strategy.borrow_rate_bps_annual,
+            financing_rate_bps_annual=strategy.financing_rate_bps_annual,
+        ).calculate(
+            scaled_targets,
+            held_weights,
+            annualization=self.annualization,
         )
+        turnover = cost_breakdown.frame["turnover"]
+        transaction_cost = cost_breakdown.total
         net_return = (gross_return - transaction_cost).rename("net_return")
         equity = (1.0 + net_return.clip(lower=-0.999999)).cumprod().rename("equity")
         drawdown = drawdown_series(net_return)
@@ -134,8 +150,8 @@ class PairBacktester:
         frame["held_weight_y"] = held_weights["weight_y"]
         frame["held_weight_x"] = held_weights["weight_x"]
         frame["gross_return"] = gross_return
-        frame["turnover"] = turnover
-        frame["transaction_cost"] = transaction_cost
+        for column in cost_breakdown.frame:
+            frame[column] = cost_breakdown.frame[column]
         frame["net_return"] = net_return
         frame["equity"] = equity
         frame["drawdown"] = drawdown
@@ -145,5 +161,9 @@ class PairBacktester:
             annualization=self.annualization,
             turnover=turnover,
             positions=position,
+        )
+        metrics["total_transaction_cost"] = float(transaction_cost.sum())
+        metrics["gross_total_return"] = float(
+            (1.0 + gross_return.clip(lower=-0.999999)).prod() - 1.0
         )
         return PairBacktestResult(pair=pair, config=strategy, frame=frame, metrics=metrics)

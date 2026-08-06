@@ -18,6 +18,7 @@ class PairDiagnostics:
     static_beta: float
     coint_statistic: float
     coint_pvalue: float
+    coint_qvalue: float
     adf_statistic: float
     adf_pvalue: float
     half_life_days: float
@@ -27,8 +28,9 @@ class PairDiagnostics:
     second_half_beta: float
     beta_instability: float
     passes_research_gate: bool
+    gate_reasons: tuple[str, ...]
 
-    def to_dict(self) -> dict[str, float | int | str | bool]:
+    def to_dict(self) -> dict[str, object]:
         return asdict(self)
 
 
@@ -67,8 +69,30 @@ def _hurst_exponent(values: pd.Series) -> float:
     return float(slope)
 
 
+def _gate_reasons(
+    *,
+    coint_pvalue: float,
+    adf_pvalue: float,
+    half_life: float,
+    hurst: float,
+    beta_instability: float,
+) -> tuple[str, ...]:
+    reasons: list[str] = []
+    if coint_pvalue >= 0.05:
+        reasons.append("cointegration")
+    if adf_pvalue >= 0.05:
+        reasons.append("stationarity")
+    if not np.isfinite(half_life) or not 2.0 <= half_life <= 126.0:
+        reasons.append("half_life")
+    if not np.isfinite(hurst) or hurst >= 0.5:
+        reasons.append("hurst")
+    if beta_instability >= 0.5:
+        reasons.append("beta_instability")
+    return tuple(reasons)
+
+
 def diagnose_pair(prices: pd.DataFrame, pair: PairConfig) -> PairDiagnostics:
-    """Evaluate whether a pair merits backtesting before tuning a strategy."""
+    """Evaluate whether a pair merits backtesting before parameter tuning."""
 
     aligned = prices[[pair.y, pair.x]].dropna().astype(float).sort_index()
     if len(aligned) < 100:
@@ -92,21 +116,21 @@ def diagnose_pair(prices: pd.DataFrame, pair: PairConfig) -> PairDiagnostics:
     _, first_beta = _ols_beta(log_y.iloc[:midpoint].to_numpy(), log_x.iloc[:midpoint].to_numpy())
     _, second_beta = _ols_beta(log_y.iloc[midpoint:].to_numpy(), log_x.iloc[midpoint:].to_numpy())
     beta_instability = float(abs(second_beta - first_beta) / max(abs(beta), 1e-8))
-
-    passes = bool(
-        coint_pvalue < 0.05
-        and adf_pvalue < 0.05
-        and np.isfinite(half_life)
-        and 2.0 <= half_life <= 126.0
-        and hurst < 0.5
-        and beta_instability < 0.5
+    reasons = _gate_reasons(
+        coint_pvalue=float(coint_pvalue),
+        adf_pvalue=float(adf_pvalue),
+        half_life=half_life,
+        hurst=hurst,
+        beta_instability=beta_instability,
     )
+
     return PairDiagnostics(
         pair=pair.name,
         observations=len(aligned),
         static_beta=beta,
         coint_statistic=float(coint_statistic),
         coint_pvalue=float(coint_pvalue),
+        coint_qvalue=float(coint_pvalue),
         adf_statistic=float(adf_statistic),
         adf_pvalue=float(adf_pvalue),
         half_life_days=half_life,
@@ -115,6 +139,6 @@ def diagnose_pair(prices: pd.DataFrame, pair: PairConfig) -> PairDiagnostics:
         first_half_beta=first_beta,
         second_half_beta=second_beta,
         beta_instability=beta_instability,
-        passes_research_gate=passes,
+        passes_research_gate=not reasons,
+        gate_reasons=reasons,
     )
-

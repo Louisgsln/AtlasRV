@@ -1,7 +1,7 @@
-"""Market-data adapters, validation, caching, and synthetic fixtures."""
+"""Market-data sources, quality controls, snapshots, and synthetic fixtures."""
 
+from atlas_rv.data.snapshot import SnapshotManifest, read_snapshot, write_snapshot
 from atlas_rv.data.sources import CsvSource, FredSource, MarketDataSource, YahooFinanceSource
-from atlas_rv.data.synthetic import SyntheticUniverse, generate_cross_asset_universe
 from atlas_rv.data.validation import DataQualityReport, clean_prices, validate_prices
 
 __all__ = [
@@ -9,10 +9,10 @@ __all__ = [
     "DataQualityReport",
     "FredSource",
     "MarketDataSource",
-    "SyntheticUniverse",
+    "SnapshotManifest",
     "YahooFinanceSource",
     "clean_prices",
-    "generate_cross_asset_universe",
+    "read_snapshot",
     "validate_prices",
+    "write_snapshot",
 ]
-

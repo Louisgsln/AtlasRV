@@ -1,164 +1,208 @@
 # AtlasRV
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB.svg)](https://www.python.org/)
+[![Python 3.11–3.13](https://img.shields.io/badge/python-3.11%E2%80%933.13-3776AB.svg)](https://www.python.org/)
 [![CI](https://github.com/Louisgsln/AtlasRV/actions/workflows/ci.yml/badge.svg)](https://github.com/Louisgsln/AtlasRV/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/badge/release-v0.2.0-2F80ED.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2F80ED.svg)](LICENSE)
 
-**A regime-aware, cross-asset relative-value research and backtesting lab.**
+**A causal, regime-aware, cross-asset relative-value research platform.**
 
-AtlasRV tests whether temporary dislocations between economically linked assets
-survive causal modelling, walk-forward selection, execution lags, trading costs,
-and portfolio risk controls. It is a research system—not a collection of chart
-patterns and not a claim of live profitability.
+AtlasRV investigates temporary dislocations between economically linked instruments.
+It combines statistical research, realistic execution assumptions, portfolio construction,
+reproducible data artefacts, and production-style Python engineering. It is deliberately
+multi-asset: equities, rates, credit, commodities, crypto, FX, and volatility can all use
+the same research contract.
 
-![Out-of-sample synthetic demonstration](docs/assets/demo_portfolio.png)
+![Deterministic out-of-sample demonstration](docs/assets/demo_portfolio.png)
 
-The exact held-out metrics and the deliberately rejected relationship are shown
-in [Reproducible demo results](docs/demo-results.md).
+> AtlasRV is research software and an interview portfolio project. Synthetic or
+> historical results are not a claim of live profitability or investment advice.
 
-## Why this project exists
+## Why it stands out
 
-Most pairs-trading demos fit a static regression on a full dataset, optimise a
-threshold on the same history, trade on the signal bar, and omit two-leg costs.
-AtlasRV makes those assumptions explicit and testable.
+Many pairs-trading examples fit one full-sample regression, optimise on the same
+history, trade on the signal bar, and hide costs inside one arbitrary number.
+AtlasRV makes each choice observable and testable.
 
-The project demonstrates three complementary skills:
-
-- **markets:** economic hypotheses spanning equities, rates, credit, and commodities;
-- **research:** cointegration diagnostics, dynamic hedge ratios, regime failure,
-  purged walk-forward testing, and honest limitations;
-- **engineering:** typed package architecture, provider interfaces, CLI, tests,
-  CI, reproducible artefacts, and an optional dashboard.
-
-## Default research universe
-
-| Relationship | Asset classes | Economic link |
-|---|---|---|
-| Energy equities / crude oil | Equity / commodity | Shared oil cash-flow driver |
-| Copper miners / copper | Equity / commodity | Operating leverage to the metal |
-| Gold / inflation-linked bonds | Commodity / rates | Real-rate and inflation sensitivity |
-| High-yield credit / equities | Credit / equity | Claims on common corporate balance sheets |
-| Banks / curve proxy | Equity / rates | Earnings sensitivity to the rate regime |
-
-The reproducible demo generates deterministic versions of these relationships.
-One pair contains a deliberate structural beta break so the research gate does
-not approve everything it sees.
+| Layer | AtlasRV v0.2 |
+|---|---|
+| Economic research | Explicit thesis and asset-class metadata for every relationship |
+| Statistical gate | Cointegration, ADF, half-life, Hurst, beta stability, and FDR q-values |
+| Hedge models | Causal expanding OLS, rolling OLS, and dynamic Kalman regression |
+| Information timing | Prior-window z-scores, next-bar execution, purged walk-forward tests |
+| Execution | Commission, half-spread, slippage, quadratic impact, borrow, and financing |
+| Portfolio | Correlation-adjusted inverse volatility, caps, optional vol target, effective bets |
+| Regimes | Ex-ante high/low-volatility and up/down-trend attribution |
+| Reproducibility | Canonical data snapshot with SHA-256 integrity manifest |
+| Delivery | Typed package, CLI, tests, CI, Docker, HTML report, and Streamlit dashboard |
 
 ## Research flow
 
-```mermaid
+~~~mermaid
 flowchart TD
-    A["Economic thesis"] --> B["Aligned point-in-time data"]
-    B --> C["Stability diagnostics"]
-    C --> D["Dynamic hedge ratio"]
-    D --> E["Causal spread signal"]
+    A["Economic thesis"] --> B["Point-in-time data"]
+    B --> C["Quality + SHA-256 snapshot"]
+    C --> D["Diagnostics + FDR"]
+    D --> E["Causal hedge model"]
     E --> F["Train / purge / test"]
-    F --> G["Lagged execution + costs"]
-    G --> H["Cross-sleeve risk allocation"]
-```
+    F --> G["Next-bar execution + costs"]
+    G --> H["Correlation-aware portfolio"]
+    H --> I["Regime attribution + reports"]
+~~~
 
-Key safeguards:
+The core timing invariant is simple: a return can only be earned with information
+available before that return begins. Regression tests perturb future prices and
+assert that every earlier model state, signal, weight, cost, and return stays unchanged.
 
-- one-step Kalman innovations rather than fitted full-sample residuals;
-- z-score history ending at `t-1`;
-- targets formed at close `t` applied to return `t → t+1`;
-- explicit turnover across both legs;
-- rolling train/purge/test parameter selection;
-- volatility estimates shifted before portfolio allocation;
-- future-perturbation regression test for look-ahead leakage.
+## Cross-asset universes
 
-The equations and timing convention are documented in
-[Methodology](docs/methodology.md).
+The deterministic universe is executable without credentials and includes:
+
+- energy equities versus crude oil;
+- copper miners versus copper;
+- gold versus inflation-linked bonds;
+- high-yield credit versus equities;
+- banks versus a rates-curve proxy;
+- one deliberate structural break that the research gate should reject.
+
+The broader exploratory market config adds Treasury-curve, bitcoin futures-basis,
+EURUSD/dollar-proxy, and volatility/equity relationships. Yahoo symbols are convenient
+proxies, not institutional point-in-time data.
 
 ## Quick start
 
-```bash
+~~~bash
 git clone https://github.com/Louisgsln/AtlasRV.git
 cd AtlasRV
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 python -m pip install -e ".[dev]"
-atlas-rv demo --output reports/demo
-```
+atlas-rv research   --provider synthetic   --config configs/universe.yml   --output reports/research
+~~~
 
-The command produces:
+Windows activation:
 
-```text
-reports/demo/
+~~~powershell
+.venv\Scripts\Activate.ps1
+~~~
+
+The unified research command defaults to purged walk-forward evaluation. Add
+**--full-sample** only for diagnostics, never for a headline out-of-sample claim.
+
+## Compare hedge models
+
+~~~bash
+atlas-rv compare-models   --provider synthetic   --config configs/universe.yml   --pair oil_energy   --output reports/model_comparison.csv
+~~~
+
+The signal, thresholds, execution, and costs remain identical. Only the estimator
+changes, making the comparison interpretable.
+
+## Explore market-data proxies
+
+~~~bash
+python -m pip install -e ".[data]"
+atlas-rv research   --provider yahoo   --config configs/market_universe.yml   --start 2015-01-01   --output reports/market_universe
+~~~
+
+For serious research, replace the optional Yahoo adapter with licensed,
+point-in-time futures chains, bonds, options, or intraday data while preserving
+the MarketDataSource interface.
+
+## Research bundle
+
+~~~text
+reports/research/
 ├── research_report.md
+├── research_report.html
 ├── summary.json
 ├── diagnostics.csv
 ├── pair_metrics.csv
+├── regime_metrics.csv
+├── regimes.csv
 ├── portfolio.csv
 ├── portfolio_weights.csv
+├── portfolio_class_allocations.csv
 ├── portfolio_equity.png
 ├── pair_zscores.png
+├── data_snapshot/
+│   ├── prices.csv
+│   └── prices.manifest.json
 ├── pairs/
 └── walk_forward_folds/
-```
+~~~
 
-## Run with market-data proxies
+The manifest records shape, symbols, dates, and the exact SHA-256 hash of canonical
+input bytes. A modified snapshot fails integrity validation.
 
-The optional Yahoo adapter is provided for experimentation—not for institutional
-research claims.
+## Dashboard
 
-```bash
-python -m pip install -e ".[data]"
-atlas-rv download \
-  --symbols "XLE,CL=F,COPX,HG=F,GLD,TIP,HYG,SPY,KBE,SHY" \
-  --start 2015-01-01 \
-  --output data/cache/yahoo_proxies.csv
-
-atlas-rv run-csv \
-  --prices data/cache/yahoo_proxies.csv \
-  --config configs/yahoo_proxies.yml \
-  --output reports/yahoo_proxies
-```
-
-For serious work, replace this adapter with licensed, point-in-time futures,
-bond, options, or intraday data while keeping the same `MarketDataSource`
-contract.
-
-## Optional dashboard
-
-```bash
+~~~bash
 python -m pip install -e ".[dashboard]"
 streamlit run dashboard/app.py
-```
+~~~
 
-## Architecture
+The dashboard exposes portfolio equity, drawdown, sleeve allocation, asset-class
+mix, realised correlations, research-gate decisions, pair signals, cost attribution,
+regime performance, and the data-integrity manifest.
 
-```text
-src/atlas_rv/
-├── data/        # sources, quality gates, cache, deterministic universe
-├── models/      # sequential dynamic regression
-├── signals/     # causal standardisation and trade state machine
-├── backtest/    # next-bar execution and walk-forward evaluation
-├── research/    # cointegration, half-life, Hurst, stability
-├── risk/        # metrics and cross-sleeve allocation
-├── reporting/   # charts and reproducible research bundle
-└── cli.py
-```
+## Docker
 
-## Quality checks
+~~~bash
+docker build -t atlasrv .
+docker run --rm -v "$PWD/reports:/app/reports" atlasrv
+~~~
 
-```bash
+## Quality gates
+
+~~~bash
 ruff check src tests
 mypy src
 pytest
-```
+python -m build
+twine check dist/*
+~~~
 
-The test suite covers causal invariance, Kalman tracking, stateful entries and
-stops, transaction-cost attribution, purged folds, structural-break rejection,
-data-store round trips, and concentration-capped allocation.
+The suite covers:
 
-## Interview material
+- future-price perturbation and causal invariance;
+- Kalman tracking and both causal OLS estimators;
+- stateful entries, exits, stops, and cooldown;
+- exact gross-to-net cost reconciliation;
+- purged and disjoint out-of-sample folds;
+- FDR correction and structural-break rejection;
+- correlation-aware concentration caps;
+- causal regime labels;
+- deterministic snapshot hashes and tamper detection;
+- report serialization and data-store round trips.
 
-[Interview guide](docs/interview-guide.md) contains a 30-second pitch, a
-two-minute walkthrough, likely technical questions, design trade-offs, and
-weaknesses worth volunteering.
+## Architecture and methodology
 
-## Disclaimer
+- [Architecture](docs/architecture.md)
+- [Methodology and information timing](docs/methodology.md)
+- [v0.2 design notes](docs/v0.2.md)
+- [Reproducible synthetic results](docs/demo-results.md)
+- [Interview guide](docs/interview-guide.md)
 
-AtlasRV is educational research software. Synthetic and historical results do
-not represent future performance, investment advice, or an executable strategy.
+## Thirty-second interview pitch
+
+> AtlasRV is a cross-asset relative-value research platform I built in Python.
+> It compares three causal hedge-ratio models, controls multiple testing, selects
+> parameters through purged walk-forward folds, applies next-bar execution with
+> explicit two-leg costs, and combines approved sleeves using lagged volatility
+> and correlation. Every run produces auditable data, risk, regime, and reporting
+> artefacts, and the tests actively prove that changing the future cannot alter
+> the past.
+
+## Honest limitations
+
+- Proxy data mix trading hours and can conceal basis and roll effects.
+- Linear-plus-quadratic costs are calibrated assumptions, not an order-book simulator.
+- FDR control reduces false discoveries but cannot remove selection bias.
+- Daily data cannot model intraday liquidity, latency, or partial fills.
+- Regimes are descriptive state labels, not forecasts.
+- A stable historical relationship can still fail economically.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

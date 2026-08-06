@@ -1,6 +1,9 @@
 annualization: 252
+fdr_alpha: 0.05
 
 strategy:
+  hedge_model: kalman
+  rolling_ols_lookback: 126
   zscore_lookback: 60
   entry_z: 2.0
   exit_z: 0.5
@@ -8,6 +11,12 @@ strategy:
   kalman_delta: 0.000001
   observation_variance: 0.001
   cost_bps: 2.0
+  commission_bps: 0.0
+  half_spread_bps: 0.0
+  slippage_bps: 0.0
+  impact_coefficient_bps: 0.0
+  borrow_rate_bps_annual: 0.0
+  financing_rate_bps_annual: 0.0
   target_volatility: 0.10
   volatility_lookback: 42
   max_leverage: 2.0
@@ -18,6 +27,16 @@ walk_forward:
   purge_size: 5
   zscore_lookbacks: [40, 60, 90]
   entry_thresholds: [1.5, 2.0, 2.5]
+
+portfolio:
+  volatility_lookback: 63
+  correlation_lookback: 126
+  correlation_penalty: 1.0
+  rebalance_frequency: 21
+  max_weight: 0.35
+  allocation_cost_bps: 1.0
+  target_volatility: null
+  max_leverage: 1.5
 
 pairs:
   - name: oil_energy

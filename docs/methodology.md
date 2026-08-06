@@ -1,115 +1,175 @@
 # Methodology and information timing
 
-AtlasRV is designed around a simple rule: a return can only be earned with
-information that existed before that return began.
+AtlasRV is built around one invariant:
 
-## 1. Economic relationship first
+> A return may only be earned with information that existed before that return began.
 
-A candidate pair is registered with two instruments, their asset classes, and
-an economic thesis. Statistical similarity alone is not sufficient. Examples
-include crude oil versus energy equities, high-yield credit versus equities,
-and gold versus inflation-protected bonds.
+## 1. Economic relationship before statistics
 
-## 2. Dynamic fair value
+Each candidate contains two instruments, asset classes, and an economic thesis.
+Statistical similarity is not sufficient. The transmission mechanism might be
+cash-flow exposure, a shared discount-rate factor, balance-sheet seniority,
+duration, futures basis, funding, or a common risk-premium shock.
 
-Positive price levels are transformed to logs and modelled as
+The config is part of the research record. Repeatedly changing a universe after
+seeing results is a form of selection bias even when every backtest is coded correctly.
 
-\[
-\log Y_t = \alpha_t + \beta_t \log X_t + \varepsilon_t.
-\]
+## 2. Data contract and immutable snapshot
 
-The state \((\alpha_t, \beta_t)\) follows a random walk and is estimated with a
-Kalman filter. The spread used by the strategy is the one-step innovation
+Every provider returns a wide price frame indexed by timestamps. Validation checks:
 
-\[
-e_t = \log Y_t - \hat{\alpha}_{t|t-1}
-      - \hat{\beta}_{t|t-1}\log X_t.
-\]
+- sorted and unique timestamps;
+- numeric, finite observations;
+- minimum history;
+- missing values and conservative forward fills;
+- stale-price fractions;
+- strictly positive levels for log-price models.
 
-Because the prediction is formed before observing \(Y_t\), this is not a fitted
-in-sample residual.
+Each run writes canonical CSV bytes plus a SHA-256 manifest containing the symbols,
+dates, dimensions, and checksum. This proves which exact input bytes produced a report.
 
-## 3. Causal standardisation
+Yahoo-adjusted values are exploratory proxies. Institutional research requires
+point-in-time licensed data, exchange calendars, explicit futures rolls, corporate
+actions, and timestamps representing when observations became knowable.
 
-The z-score compares today's innovation with a trailing distribution ending at
-\(t-1\):
+## 3. Research gate and false discoveries
 
-\[
-z_t = \frac{e_t - \mu(e_{t-L:t-1})}{\sigma(e_{t-L:t-1})}.
-\]
-
-Long-spread and short-spread trades enter beyond symmetric thresholds, exit
-inside a smaller band, and stop beyond an outer band. A stopped relationship
-must return inside the entry band before it can trade again.
-
-## 4. Hedge weights and execution
-
-For spread direction \(s_t \in \{-1,0,1\}\), weights are normalised to unit gross
-exposure before volatility scaling:
-
-\[
-w^Y_t = \frac{s_t}{1 + |\beta_t|}, \qquad
-w^X_t = -\frac{s_t\beta_t}{1 + |\beta_t|}.
-\]
-
-Targets formed at close \(t\) are applied to the close-to-close return
-\(t \rightarrow t+1\). Two-leg turnover is
-
-\[
-\tau_{t+1} = |w^Y_t-w^Y_{t-1}| + |w^X_t-w^X_{t-1}|,
-\]
-
-and linear trading cost is \(\tau_{t+1}c\), where \(c\) is expressed in basis
-points. The implementation exposes gross return, cost, net return, and turnover
-as separate columns.
-
-## 5. Volatility control
-
-An optional multiplier targets annualised portfolio volatility using realised
-strategy returns available at the decision date. It is capped to prevent a calm
-window from producing unbounded leverage.
-
-## 6. Walk-forward selection
-
-Each fold contains:
-
-1. a rolling training window;
-2. a purge interval;
-3. a disjoint test window.
-
-Lookback and entry threshold are selected only on the training window. The
-selection objective is training Sharpe after costs minus a turnover penalty.
-All headline strategy returns from the default demo are concatenated test
-windows, not training returns.
-
-## 7. Research gate
-
-AtlasRV reports, but does not blindly trust:
+For each relationship AtlasRV reports:
 
 - Engle-Granger cointegration p-value;
 - ADF p-value of the static residual;
-- estimated mean-reversion half-life;
+- mean-reversion half-life;
 - Hurst exponent;
 - return correlation;
 - first-half versus second-half beta instability.
 
-The synthetic universe deliberately includes a structural beta change so the
-gate has something it should reject.
+Testing many candidates at 5% creates false positives. The Benjamini-Hochberg
+procedure sorts the m p-values and computes monotone adjusted q-values. A pair
+must pass both its individual stability checks and the universe-level q-value
+threshold. The correction can reject an additional pair but never reverse an
+existing rejection.
 
-## 8. Cross-sleeve allocation
+FDR control does not remove all data snooping. The candidate universe and every
+manual research iteration still need governance.
 
-Held-out pair returns are combined with lagged inverse-volatility weights. The
-weights rebalance periodically and are concentration-capped; when too few
-sleeves have estimable volatility, unused risk remains in cash.
+## 4. Three causal hedge models
 
-## Limitations
+Positive price levels are transformed to logs:
 
-- Cointegration does not imply a causal or permanent relationship.
-- A universe selected after observing history creates selection bias.
-- Yahoo-adjusted proxies do not model futures rolls, financing, bid/ask spreads,
-  asynchronous closing times, corporate actions, or point-in-time constituents.
-- Linear costs omit market impact and capacity.
-- Hyperparameter searches create multiple-testing risk even with walk-forward
-  evaluation.
-- Synthetic results validate software behaviour, not profitability.
+[
+log Y_t = alpha_t + eta_t log X_t + arepsilon_t.
+]
 
+AtlasRV supports:
+
+1. **Expanding OLS** as a slow causal benchmark. The estimate for t uses rows before t.
+2. **Rolling OLS** using a fixed trailing window ending at t-1.
+3. **Kalman regression** with random-walk alpha and beta states.
+
+A full-sample static OLS coefficient is intentionally not a tradable benchmark,
+because its early predictions contain late observations.
+
+Every estimator returns the same contract: prior-state alpha, prior-state beta,
+one-step innovation, and innovation variance. Model comparison holds the signal,
+execution, costs, and risk settings constant.
+
+For the Kalman model, the tradable error is the prior prediction innovation:
+
+[
+e_t = log Y_t - hat{alpha}_{t|t-1}
+      - hat{eta}_{t|t-1}log X_t.
+]
+
+## 5. Causal signal state machine
+
+The z-score compares the current innovation with a distribution ending yesterday:
+
+[
+z_t = rac{e_t - mu(e_{t-L:t-1})}
+           {sigma(e_{t-L:t-1})}.
+]
+
+Long- and short-spread trades enter beyond symmetric thresholds, exit inside a
+smaller band, and stop beyond an outer band. After a stop, the relationship must
+return inside the entry band before it can re-enter.
+
+## 6. Hedge weights and next-bar execution
+
+For spread direction s and hedge ratio beta, target weights are normalised to
+unit gross exposure before sleeve volatility scaling:
+
+[
+w^Y_t = rac{s_t}{1+|eta_t|},
+qquad
+w^X_t = -rac{s_teta_t}{1+|eta_t|}.
+]
+
+Targets formed using close t become held weights for the close-to-close return
+from t to t+1. Same-bar signal and P&L are prohibited.
+
+## 7. Execution and holding costs
+
+Per-leg turnover is based on the target-weight change that becomes active for the
+current return. The cost model exposes:
+
+- backwards-compatible all-in linear cost;
+- commission;
+- half bid-ask spread;
+- slippage;
+- quadratic impact in per-leg turnover;
+- annualised borrow on short held notional;
+- annualised financing on gross held notional.
+
+For every day:
+
+[
+r^{net}_t = r^{gross}_t
+- c^{legacy}_t - c^{commission}_t - c^{spread}_t
+- c^{slippage}_t - c^{impact}_t - c^{borrow}_t - c^{funding}_t.
+]
+
+These are transparent stress assumptions, not an order-book or capacity model.
+
+## 8. Purged walk-forward selection
+
+Each fold has a rolling training interval, purge gap, and disjoint test interval.
+Lookback and entry threshold are selected only on training returns after costs,
+with a turnover penalty. Headline returns concatenate test windows only.
+
+The purge reduces temporal leakage but cannot correct a universe chosen with
+full-history hindsight.
+
+## 9. Correlation-aware portfolio construction
+
+Approved sleeve returns are combined using ex-ante volatility estimates shifted
+by one bar. At each rebalance, inverse-volatility scores are penalised when a sleeve
+has high average absolute trailing correlation with the others. Weights are capped,
+and optional portfolio-level volatility scaling uses a trailing covariance matrix.
+
+Reports include:
+
+- sleeve weights and allocation turnover;
+- allocation costs;
+- gross allocation;
+- effective number of bets;
+- allocation mix by asset class.
+
+The asset-class mix is not a directional factor model. A production system still
+needs beta, duration, convexity, vega, currency, liquidity, and concentration constraints.
+
+## 10. Causal regime attribution
+
+A benchmark proxy is classified by trailing volatility and trend statistics shifted
+by one bar. Strategy performance is grouped by the regime known before each return.
+This describes conditional behaviour; it does not predict the next regime.
+
+## 11. Known limitations
+
+- Cointegration is not causality and can break permanently.
+- Proxy instruments introduce basis, roll, financing, and trading-hours differences.
+- Daily bars omit latency, partial fills, queueing, and intraday capacity.
+- Cost coefficients require venue- and size-specific calibration.
+- FDR does not remove discretionary universe or specification mining.
+- Regime labels are sensitive to their chosen windows.
+- A relative-value portfolio can retain hidden common factors.
+- Synthetic data validates software behaviour, not profitability.
