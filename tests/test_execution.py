@@ -8,11 +8,11 @@ from atlas_rv.execution.costs import ExecutionCostModel
 
 
 def test_cost_model_reconciles_every_component() -> None:
-    index = pd.bdate_range("2024-01-01", periods=4)
+    index = pd.bdate_range("2024-01-01", periods=5)
     targets = pd.DataFrame(
         {
-            "weight_y": [0.0, 0.5, 0.5, 0.0],
-            "weight_x": [0.0, -0.5, -0.5, 0.0],
+            "weight_y": [0.0, 0.5, 0.5, 0.0, 0.0],
+            "weight_x": [0.0, -0.5, -0.5, 0.0, 0.0],
         },
         index=index,
     )

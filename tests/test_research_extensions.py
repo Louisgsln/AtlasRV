@@ -16,8 +16,8 @@ def test_benjamini_hochberg_is_monotone_in_ranked_pvalues() -> None:
     )
 
     assert np.isclose(adjusted["a"], 0.04)
-    assert np.isclose(adjusted["c"], 0.04)
-    assert adjusted["b"] >= adjusted["c"]
+    assert np.isclose(adjusted["c"], 0.04 * 4.0 / 3.0)
+    assert np.isclose(adjusted["b"], adjusted["c"])
     assert np.isclose(adjusted["d"], 0.20)
 
 

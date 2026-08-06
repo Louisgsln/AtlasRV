@@ -80,4 +80,6 @@ def read_snapshot(manifest_path: str | Path) -> pd.DataFrame:
     frame = pd.read_csv(data_path, index_col="date", parse_dates=True)
     if len(frame) != int(raw["rows"]) or frame.shape[1] != int(raw["columns"]):
         raise ValueError("Snapshot dimensions do not match the manifest")
+    frame.index.name = None
+    frame.columns.name = None
     return frame.astype(float)
