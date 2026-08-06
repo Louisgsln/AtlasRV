@@ -1,0 +1,25 @@
+{
+  "columns": 15,
+  "dataset_file": "prices.csv",
+  "end": "2026-08-06 00:00:00",
+  "rows": 2044,
+  "sha256": "294498c9d691064ccaa130f494e5c95054f63f0134c01de00440a24e0086e83a",
+  "start": "2021-01-01 00:00:00",
+  "symbols": [
+    "BAMLC0A0CM",
+    "BAMLH0A0HYM2",
+    "CBBTCUSD",
+    "CBETHUSD",
+    "DCOILBRENTEU",
+    "DCOILWTICO",
+    "DEXUSEU",
+    "DEXUSUK",
+    "DGS1",
+    "DGS2",
+    "DJIA",
+    "NASDAQCOM",
+    "SP500",
+    "VIXCLS",
+    "VXVCLS"
+  ]
+}

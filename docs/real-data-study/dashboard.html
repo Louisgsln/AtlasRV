@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AtlasRV research dashboard</title>
+<style>
+:root { --navy:#102a43; --blue:#2f80ed; --ink:#243b53; --muted:#627d98; --bg:#f5f8fb; }
+body { margin:0; font:15px/1.55 Inter,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+main { max-width:1120px; margin:0 auto; padding:40px 24px 72px; }
+h1,h2 { color:var(--navy); } h1 { margin-bottom:4px; }
+.subtitle { color:var(--muted); margin-top:0; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:24px 0; }
+.card { background:white; border:1px solid #d9e2ec; border-radius:10px; padding:16px; }
+.card span { display:block; color:var(--muted); font-size:12px; text-transform:uppercase; }
+.card strong { display:block; font-size:24px; color:var(--navy); margin-top:4px; }
+.panel { background:white; border:1px solid #d9e2ec; border-radius:12px; padding:22px; margin:18px 0; overflow:auto; }
+img { width:100%; height:auto; }
+table { width:100%; border-collapse:collapse; } th,td { padding:9px; border-bottom:1px solid #e8eef4; text-align:right; }
+th:first-child,td:first-child { text-align:left; } .pass { color:#16803c; font-weight:700; }
+.review { color:#b54708; font-weight:700; } code { background:#eef2f6; padding:2px 5px; }
+</style>
+</head>
+<body><main>
+<h1>AtlasRV research dashboard</h1>
+<p class="subtitle">FRED public observed series (real-data stress study; research gate enforced) · causal cross-asset relative value</p>
+<div class="cards"><div class="card"><span>Sharpe</span><strong>0.86</strong></div><div class="card"><span>Annual return</span><strong>2.38%</strong></div><div class="card"><span>Annual volatility</span><strong>2.79%</strong></div><div class="card"><span>Maximum drawdown</span><strong>-4.08%</strong></div><div class="card"><span>Effective bets</span><strong>2.50</strong></div></div>
+<section class="panel"><h2>Causal out-of-sample portfolio</h2><img src="portfolio_equity.png" alt="Portfolio equity and drawdown"></section>
+<section class="panel"><h2>Research gate</h2>
+<table><thead><tr><th>Relationship</th><th>p-value</th><th>FDR q-value</th><th>Half-life</th><th>Beta instability</th><th>Decision</th></tr></thead>
+<tbody><tr><td>wti_brent</td><td>0.0000</td><td>0.0000</td><td>7.8d</td><td>0.6%</td><td class=pass>PASS</td></tr><tr><td>treasury_2y_1y</td><td>0.0000</td><td>0.0000</td><td>15.6d</td><td>13.3%</td><td class=pass>PASS</td></tr><tr><td>sp500_dow</td><td>0.0189</td><td>0.0302</td><td>50.1d</td><td>13.3%</td><td class=pass>PASS</td></tr><tr><td>nasdaq_sp500</td><td>0.1480</td><td>0.1480</td><td>151.5d</td><td>36.9%</td><td class=review>REVIEW</td></tr><tr><td>euro_sterling</td><td>0.0258</td><td>0.0343</td><td>47.2d</td><td>33.1%</td><td class=pass>PASS</td></tr><tr><td>hy_ig_credit</td><td>0.0004</td><td>0.0010</td><td>16.2d</td><td>10.0%</td><td class=pass>PASS</td></tr><tr><td>vix_curve</td><td>0.0801</td><td>0.0915</td><td>14.1d</td><td>3.8%</td><td class=review>REVIEW</td></tr><tr><td>bitcoin_ether</td><td>0.0150</td><td>0.0300</td><td>70.7d</td><td>83.7%</td><td class=review>REVIEW</td></tr></tbody></table></section>
+<section class="panel"><h2>Performance by ex-ante regime</h2><table class="dataframe dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>observations</th>
+      <th>annualized_return</th>
+      <th>annualized_volatility</th>
+      <th>sharpe</th>
+      <th>max_drawdown</th>
+    </tr>
+    <tr>
+      <th>regime</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>high_vol__down</th>
+      <td>40.000</td>
+      <td>0.041</td>
+      <td>0.022</td>
+      <td>1.843</td>
+      <td>-0.004</td>
+    </tr>
+    <tr>
+      <th>high_vol__up</th>
+      <td>539.000</td>
+      <td>0.044</td>
+      <td>0.028</td>
+      <td>1.559</td>
+      <td>-0.014</td>
+    </tr>
+    <tr>
+      <th>low_vol__down</th>
+      <td>182.000</td>
+      <td>-0.031</td>
+      <td>0.029</td>
+      <td>-1.040</td>
+      <td>-0.026</td>
+    </tr>
+    <tr>
+      <th>low_vol__up</th>
+      <td>762.000</td>
+      <td>0.022</td>
+      <td>0.028</td>
+      <td>0.801</td>
+      <td>-0.043</td>
+    </tr>
+  </tbody>
+</table></section>
+<section class="panel"><h2>Deterministic benchmark</h2><code>atlas-rv research --provider synthetic --config configs/universe.yml --output reports/research</code></section>
+<p class="subtitle">Research software only. FRED levels are observed public series, not necessarily executable total-return instruments.</p>
+</main></body></html>
