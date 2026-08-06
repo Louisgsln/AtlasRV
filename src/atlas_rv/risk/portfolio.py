@@ -171,7 +171,7 @@ def combine_pair_results(
     )
     metrics["average_effective_bets"] = float(frame["effective_bets"].mean())
     metrics["average_gross_allocation"] = float(frame["gross_allocation"].mean())
-    metrics["max_sleeve_weight"] = float(weights.abs().max(axis=None))
+    metrics["max_sleeve_weight"] = float(\n        weights.abs().to_numpy(dtype=float).max(initial=0.0)\n    )
     class_allocations = _class_allocations(weights, results)
     return PortfolioResult(
         frame=frame,
