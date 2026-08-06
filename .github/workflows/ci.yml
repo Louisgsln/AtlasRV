@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,5 +30,21 @@ jobs:
       - name: Type check
         run: mypy src
       - name: Test
-        run: pytest
+        run: pytest --cov-report=xml
+      - name: CLI smoke test
+        run: atlas-rv --help
 
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install build tools
+        run: python -m pip install build twine
+      - name: Build distributions
+        run: python -m build
+      - name: Validate distributions
+        run: twine check dist/*
