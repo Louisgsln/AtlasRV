@@ -1,0 +1,47 @@
+annualization: 252
+
+strategy:
+  zscore_lookback: 60
+  entry_z: 2.0
+  exit_z: 0.5
+  stop_z: 4.0
+  kalman_delta: 0.000001
+  observation_variance: 0.001
+  cost_bps: 3.0
+  target_volatility: 0.10
+  volatility_lookback: 42
+  max_leverage: 2.0
+
+walk_forward:
+  train_size: 504
+  test_size: 126
+  purge_size: 5
+  zscore_lookbacks: [40, 60, 90]
+  entry_thresholds: [1.5, 2.0, 2.5]
+
+pairs:
+  - name: energy_equity_oil
+    y: XLE
+    x: CL=F
+    asset_classes: [equity, commodity]
+    thesis: US energy equities and WTI futures share an oil cash-flow driver.
+  - name: copper_miners_metal
+    y: COPX
+    x: HG=F
+    asset_classes: [equity, commodity]
+    thesis: Copper miners embed operating leverage to the copper price.
+  - name: gold_tips
+    y: GLD
+    x: TIP
+    asset_classes: [commodity, rates]
+    thesis: Gold and inflation-protected bonds share real-rate and inflation sensitivity.
+  - name: high_yield_equity
+    y: HYG
+    x: SPY
+    asset_classes: [credit, equity]
+    thesis: High-yield credit and equities are claims on common corporate fundamentals.
+  - name: banks_rates
+    y: KBE
+    x: SHY
+    asset_classes: [equity, rates]
+    thesis: Bank valuations and short-duration Treasuries respond differently to rate expectations.

@@ -1,0 +1,47 @@
+annualization: 252
+
+strategy:
+  zscore_lookback: 60
+  entry_z: 2.0
+  exit_z: 0.5
+  stop_z: 4.0
+  kalman_delta: 0.000001
+  observation_variance: 0.001
+  cost_bps: 2.0
+  target_volatility: 0.10
+  volatility_lookback: 42
+  max_leverage: 2.0
+
+walk_forward:
+  train_size: 504
+  test_size: 126
+  purge_size: 5
+  zscore_lookbacks: [40, 60, 90]
+  entry_thresholds: [1.5, 2.0, 2.5]
+
+pairs:
+  - name: oil_energy
+    y: ENERGY_EQ
+    x: WTI
+    asset_classes: [equity, commodity]
+    thesis: Energy equities and crude oil share a common cash-flow driver, but adjust at different speeds.
+  - name: copper_miners
+    y: MINERS
+    x: COPPER
+    asset_classes: [equity, commodity]
+    thesis: Miners embed operating leverage to copper and can temporarily diverge from the metal.
+  - name: gold_tips
+    y: GOLD
+    x: TIPS
+    asset_classes: [commodity, rates]
+    thesis: Gold and inflation-protected bonds share sensitivity to real rates and inflation risk.
+  - name: credit_equity
+    y: HY_CREDIT
+    x: EQUITY
+    asset_classes: [credit, equity]
+    thesis: High-yield credit and equities are two claims on the same corporate balance sheets.
+  - name: banks_curve
+    y: BANKS
+    x: CURVE_PROXY
+    asset_classes: [equity, rates]
+    thesis: Bank earnings sensitivity links sector valuations to the shape of the yield curve.

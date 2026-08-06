@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-rv"
+version = "0.1.0"
+description = "A regime-aware cross-asset relative-value research and backtesting lab."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Louis Geslin" }]
+keywords = [
+  "quantitative-finance",
+  "relative-value",
+  "pairs-trading",
+  "backtesting",
+  "cross-asset",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Financial and Insurance Industry",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "PyYAML>=6.0",
+  "scipy>=1.11",
+  "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+data = ["yfinance>=0.2.54"]
+dashboard = ["plotly>=5.24", "streamlit>=1.41"]
+dev = [
+  "mypy>=1.13,<2.0",
+  "pandas-stubs>=2.2",
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "ruff>=0.8",
+  "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+atlas-rv = "atlas_rv.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Louisgsln/AtlasRV"
+Issues = "https://github.com/Louisgsln/AtlasRV/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --cov=atlas_rv --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["atlas_rv"]
+
+[tool.coverage.report]
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+ignore_missing_imports = true
