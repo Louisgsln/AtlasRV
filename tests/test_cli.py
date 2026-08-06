@@ -10,8 +10,18 @@ def test_cli_exposes_research_and_model_comparison_commands() -> None:
     comparison = parser.parse_args(
         ["compare-models", "--provider", "synthetic", "--pair", "oil_energy"]
     )
+    fred = parser.parse_args(
+        [
+            "research",
+            "--provider",
+            "fred",
+            "--config",
+            "configs/fred_market_study.yml",
+        ]
+    )
 
     assert research.command == "research"
     assert not research.full_sample
     assert comparison.command == "compare-models"
     assert comparison.pair == "oil_energy"
+    assert fred.provider == "fred"

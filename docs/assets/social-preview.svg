@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">AtlasRV</title>
+  <desc id="desc">Causal cross-asset relative-value research in Python.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08182b"/>
+      <stop offset="1" stop-color="#123d66"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#49dcb1"/>
+      <stop offset="1" stop-color="#57a5ff"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1280" height="640" fill="url(#background)"/>
+  <circle cx="1110" cy="100" r="260" fill="#2f80ed" opacity=".09"/>
+  <circle cx="115" cy="625" r="285" fill="#18a999" opacity=".08"/>
+  <g opacity=".15" stroke="#aac7e4">
+    <path d="M70 120H1210M70 220H1210M70 320H1210M70 420H1210M70 520H1210"/>
+    <path d="M220 70V570M420 70V570M620 70V570M820 70V570M1020 70V570"/>
+  </g>
+  <text x="92" y="180" fill="#ffffff" font-family="Inter,Arial,sans-serif" font-size="88" font-weight="750">AtlasRV</text>
+  <text x="96" y="240" fill="#a9c5df" font-family="Inter,Arial,sans-serif" font-size="31">CAUSAL · CROSS-ASSET · RELATIVE VALUE</text>
+  <path d="M95 425 C180 408 230 458 315 392 S460 300 535 360 S670 440 755 322 S900 268 980 315 S1090 365 1180 220" fill="none" stroke="url(#line)" stroke-width="10" stroke-linecap="round" filter="url(#glow)"/>
+  <g font-family="Inter,Arial,sans-serif" font-size="24" fill="#dbeafa">
+    <rect x="92" y="490" width="210" height="62" rx="31" fill="#ffffff" opacity=".08"/><text x="128" y="530">Walk-forward</text>
+    <rect x="326" y="490" width="182" height="62" rx="31" fill="#ffffff" opacity=".08"/><text x="364" y="530">FDR control</text>
+    <rect x="532" y="490" width="210" height="62" rx="31" fill="#ffffff" opacity=".08"/><text x="568" y="530">Explicit costs</text>
+    <rect x="766" y="490" width="194" height="62" rx="31" fill="#ffffff" opacity=".08"/><text x="804" y="530">Portfolio risk</text>
+  </g>
+  <text x="984" y="530" fill="#49dcb1" font-family="Inter,Arial,sans-serif" font-size="27" font-weight="700">PYTHON</text>
+</svg>

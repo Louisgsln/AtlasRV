@@ -1,0 +1,153 @@
+name: Validate, release and deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: atlasrv-publication
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: read
+  statuses: write
+
+jobs:
+  publish:
+    name: Quality, real-data study, release and Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      STUDY_DIR: reports/fred_market_study
+      SITE_DIR: site
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install AtlasRV and development tools
+        run: python -m pip install -e ".[dev]"
+
+      - name: Validate source, types, tests, and CLI
+        run: |
+          ruff check src tests
+          mypy src
+          pytest --cov-report=term-missing
+          atlas-rv --help
+
+      - name: Build and validate distributions
+        run: |
+          python -m build
+          twine check dist/*
+
+      - name: Run the public FRED multi-asset study
+        run: |
+          atlas-rv research \
+            --provider fred \
+            --config configs/fred_market_study.yml \
+            --start 2021-01-01 \
+            --include-review \
+            --output "$STUDY_DIR"
+
+      - name: Build the static dashboard
+        run: |
+          mkdir -p "$SITE_DIR"
+          cp "$STUDY_DIR/research_report.html" "$SITE_DIR/index.html"
+          cp "$STUDY_DIR/portfolio_equity.png" "$SITE_DIR/portfolio_equity.png"
+          cp "$STUDY_DIR/pair_zscores.png" "$SITE_DIR/pair_zscores.png"
+          touch "$SITE_DIR/.nojekyll"
+
+      - name: Stage the auditable study
+        run: |
+          mkdir -p docs/real-data-study
+          cp "$STUDY_DIR/research_report.md" docs/real-data-study/research_report.md
+          cp "$STUDY_DIR/research_report.html" docs/real-data-study/dashboard.html
+          cp "$STUDY_DIR/summary.json" docs/real-data-study/summary.json
+          cp "$STUDY_DIR/diagnostics.csv" docs/real-data-study/diagnostics.csv
+          cp "$STUDY_DIR/pair_metrics.csv" docs/real-data-study/pair_metrics.csv
+          cp "$STUDY_DIR/regime_metrics.csv" docs/real-data-study/regime_metrics.csv
+          cp "$STUDY_DIR/portfolio_class_allocations.csv" docs/real-data-study/portfolio_class_allocations.csv
+          cp "$STUDY_DIR/portfolio_equity.png" docs/real-data-study/portfolio_equity.png
+          cp "$STUDY_DIR/pair_zscores.png" docs/real-data-study/pair_zscores.png
+          cp "$STUDY_DIR/data_snapshot/prices.manifest.json" docs/real-data-study/prices.manifest.json
+
+      - name: Bundle study release asset
+        run: python -m zipfile -c dist/atlasrv-fred-study-v0.2.0.zip docs/real-data-study
+
+      - name: Commit the generated study
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/real-data-study
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish current FRED multi-asset study"
+            git push origin HEAD:main
+          fi
+
+      - name: Create or refresh release v0.2.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          target="$(git rev-parse HEAD)"
+          if gh release view v0.2.0 >/dev/null 2>&1; then
+            gh release edit v0.2.0 \
+              --title "AtlasRV v0.2.0" \
+              --notes-file docs/releases/v0.2.0.md
+            gh release upload v0.2.0 dist/* --clobber
+          else
+            gh release create v0.2.0 dist/* \
+              --target "$target" \
+              --title "AtlasRV v0.2.0" \
+              --notes-file docs/releases/v0.2.0.md
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "${{ env.SITE_DIR }}"
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Publish run summary
+        run: |
+          {
+            echo "## AtlasRV published"
+            echo "- Dashboard: ${{ steps.deployment.outputs.page_url }}"
+            echo "- Release: https://github.com/${{ github.repository }}/releases/tag/v0.2.0"
+            echo "- Study: docs/real-data-study/research_report.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report publication status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          state="failure"
+          if [ "$JOB_STATUS" = "success" ]; then
+            state="success"
+          fi
+          gh api --method POST \
+            "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$state" \
+            -f context="AtlasRV/publish" \
+            -f description="Validation, release, study, and Pages: $JOB_STATUS"

@@ -57,6 +57,8 @@ atlas-rv = "atlas_rv.cli:main"
 
 [project.urls]
 Repository = "https://github.com/Louisgsln/AtlasRV"
+Dashboard = "https://louisgsln.github.io/AtlasRV/"
+Changelog = "https://github.com/Louisgsln/AtlasRV/blob/main/CHANGELOG.md"
 Issues = "https://github.com/Louisgsln/AtlasRV/issues"
 
 [tool.setuptools.packages.find]

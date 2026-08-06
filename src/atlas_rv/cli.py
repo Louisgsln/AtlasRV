@@ -17,7 +17,7 @@ from atlas_rv.config import (
     WalkForwardConfig,
     load_config,
 )
-from atlas_rv.data.sources import CsvSource, YahooFinanceSource
+from atlas_rv.data.sources import CsvSource, FredSource, YahooFinanceSource
 from atlas_rv.data.synthetic import generate_cross_asset_universe
 from atlas_rv.data.validation import clean_prices, validate_prices
 from atlas_rv.reporting.report import write_research_bundle
@@ -178,6 +178,18 @@ def _load_research_prices(
         if not args.prices:
             raise ValueError("--prices is required when --provider=csv")
         return CsvSource(args.prices).load(symbols), f"CSV snapshot: {args.prices}"
+    if args.provider == "fred":
+        gate_policy = (
+            "research-gate override; REVIEW relationships included"
+            if getattr(args, "include_review", False)
+            else "research gate enforced"
+        )
+        prices = FredSource().load(
+            symbols,
+            start=args.start,
+            end=args.end,
+        )
+        return prices, f"FRED public observed series (real-data stress study; {gate_policy})"
     prices = YahooFinanceSource().load(
         symbols,
         start=args.start,
@@ -249,7 +261,7 @@ def _download(args: argparse.Namespace) -> int:
 def _add_provider_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--provider",
-        choices=("synthetic", "csv", "yahoo"),
+        choices=("synthetic", "csv", "fred", "yahoo"),
         default="synthetic",
     )
     parser.add_argument("--prices", default=None, help="Wide CSV for the csv provider")
@@ -276,7 +288,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     research = subparsers.add_parser(
         "research",
-        help="Run one config with synthetic, CSV, or Yahoo data",
+        help="Run one config with synthetic, CSV, FRED, or Yahoo data",
     )
     research.add_argument("--config", default="configs/universe.yml")
     research.add_argument("--output", default="reports/research")

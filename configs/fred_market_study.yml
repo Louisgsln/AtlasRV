@@ -1,0 +1,79 @@
+annualization: 252
+fdr_alpha: 0.10
+
+# Public observed FRED levels used as a reproducible cross-asset stress study.
+# Some inputs are yields, spreads, indices, or reference levels rather than
+# executable total-return instruments. Do not interpret results as a live strategy.
+strategy:
+  hedge_model: kalman
+  rolling_ols_lookback: 126
+  zscore_lookback: 60
+  entry_z: 2.0
+  exit_z: 0.5
+  stop_z: 4.0
+  kalman_delta: 0.000001
+  observation_variance: 0.001
+  cost_bps: 0.0
+  commission_bps: 0.5
+  half_spread_bps: 1.0
+  slippage_bps: 0.5
+  impact_coefficient_bps: 0.25
+  borrow_rate_bps_annual: 50.0
+  financing_rate_bps_annual: 100.0
+  target_volatility: 0.08
+  volatility_lookback: 42
+  max_leverage: 1.5
+
+walk_forward:
+  train_size: 504
+  test_size: 126
+  purge_size: 5
+  zscore_lookbacks: [40, 60]
+  entry_thresholds: [1.0, 1.5]
+
+portfolio:
+  volatility_lookback: 63
+  correlation_lookback: 126
+  correlation_penalty: 1.25
+  rebalance_frequency: 21
+  max_weight: 0.25
+  allocation_cost_bps: 1.0
+  target_volatility: 0.08
+  max_leverage: 1.25
+
+pairs:
+  - name: us_growth_vs_broad_equity
+    y: NASDAQCOM
+    x: SP500
+    asset_classes: [equity]
+    thesis: Growth-heavy and broad US equity indices share the same macro discount-rate channel but can adjust at different speeds.
+
+  - name: treasury_curve
+    y: DGS10
+    x: DGS2
+    asset_classes: [rates]
+    thesis: Two-year and ten-year Treasury yields share monetary-policy and term-premium drivers while the curve varies cyclically.
+
+  - name: credit_vs_volatility
+    y: BAMLH0A0HYM2
+    x: VIXCLS
+    asset_classes: [credit, volatility]
+    thesis: High-yield option-adjusted spreads and implied equity volatility are linked through corporate default and risk-aversion shocks.
+
+  - name: dollar_vs_euro
+    y: DTWEXBGS
+    x: DEXUSEU
+    asset_classes: [fx]
+    thesis: The broad trade-weighted dollar and EURUSD share a dominant global dollar factor with different basket exposures.
+
+  - name: bitcoin_vs_growth_equity
+    y: CBBTCUSD
+    x: NASDAQCOM
+    asset_classes: [crypto, equity]
+    thesis: Bitcoin and growth equities can share global-liquidity and duration-sensitive risk appetite, while retaining distinct structural risks.
+
+  - name: oil_vs_equity
+    y: DCOILWTICO
+    x: SP500
+    asset_classes: [commodity, equity]
+    thesis: Crude oil and equities share growth expectations but respond differently to supply shocks and inflation risk.

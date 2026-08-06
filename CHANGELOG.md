@@ -15,7 +15,8 @@ All notable changes to AtlasRV are documented here.
 - Correlation-adjusted sleeve allocation, optional portfolio volatility target,
   effective-bet metrics, and asset-class allocation attribution.
 - Canonical CSV data snapshots with SHA-256 integrity manifests.
-- Unified synthetic, CSV, and Yahoo research command.
+- Unified synthetic, CSV, FRED, and Yahoo research command.
+- Automated real-data publication, v0.2.0 release assets, and GitHub Pages dashboard.
 - Self-contained HTML research report and expanded Streamlit dashboard.
 - Broader exploratory market universe covering equity, rates, credit,
   commodities, crypto, FX, and volatility.

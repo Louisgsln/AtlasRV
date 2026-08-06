@@ -95,7 +95,7 @@ def _write_html_report(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AtlasRV research report</title>
+<title>AtlasRV research dashboard</title>
 <style>
 :root {{ --navy:#102a43; --blue:#2f80ed; --ink:#243b53; --muted:#627d98; --bg:#f5f8fb; }}
 body {{ margin:0; font:15px/1.55 Inter,Arial,sans-serif; color:var(--ink); background:var(--bg); }}
@@ -114,15 +114,16 @@ th:first-child,td:first-child {{ text-align:left; }} .pass {{ color:#16803c; fon
 </style>
 </head>
 <body><main>
-<h1>AtlasRV research report</h1>
+<h1>AtlasRV research dashboard</h1>
 <p class="subtitle">{escape(dataset_label)} · causal cross-asset relative value</p>
 <div class="cards">{card_html}</div>
-<section class="panel"><h2>Out-of-sample portfolio</h2><img src="portfolio_equity.png" alt="Portfolio equity and drawdown"></section>
+<section class="panel"><h2>Causal out-of-sample portfolio</h2><img src="portfolio_equity.png" alt="Portfolio equity and drawdown"></section>
 <section class="panel"><h2>Research gate</h2>
 <table><thead><tr><th>Relationship</th><th>p-value</th><th>FDR q-value</th><th>Half-life</th><th>Beta instability</th><th>Decision</th></tr></thead>
 <tbody>{diagnostic_rows}</tbody></table></section>
 <section class="panel"><h2>Performance by ex-ante regime</h2>{regime_html}</section>
-<section class="panel"><h2>Reproduce</h2><code>atlas-rv research --provider synthetic --config configs/universe.yml --output reports/research</code></section>
+<section class="panel"><h2>Deterministic benchmark</h2><code>atlas-rv research --provider synthetic --config configs/universe.yml --output reports/research</code></section>
+<p class="subtitle">Research software only. FRED levels are observed public series, not necessarily executable total-return instruments.</p>
 </main></body></html>
 """
     path.write_text(html, encoding="utf-8")

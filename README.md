@@ -2,6 +2,7 @@
 
 [![Python 3.11–3.13](https://img.shields.io/badge/python-3.11%E2%80%933.13-3776AB.svg)](https://www.python.org/)
 [![CI](https://github.com/Louisgsln/AtlasRV/actions/workflows/ci.yml/badge.svg)](https://github.com/Louisgsln/AtlasRV/actions/workflows/ci.yml)
+[![Dashboard](https://img.shields.io/badge/dashboard-live-18A999.svg)](https://louisgsln.github.io/AtlasRV/)
 [![Release](https://img.shields.io/badge/release-v0.2.0-2F80ED.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2F80ED.svg)](LICENSE)
 
@@ -14,6 +15,8 @@ multi-asset: equities, rates, credit, commodities, crypto, FX, and volatility ca
 the same research contract.
 
 ![Deterministic out-of-sample demonstration](docs/assets/demo_portfolio.png)
+
+[Open the public real-data dashboard](https://louisgsln.github.io/AtlasRV/) · [Inspect the FRED study](docs/real-data-study/README.md)
 
 > AtlasRV is research software and an interview portfolio project. Synthetic or
 > historical results are not a claim of live profitability or investment advice.
@@ -34,7 +37,7 @@ AtlasRV makes each choice observable and testable.
 | Portfolio | Correlation-adjusted inverse volatility, caps, optional vol target, effective bets |
 | Regimes | Ex-ante high/low-volatility and up/down-trend attribution |
 | Reproducibility | Canonical data snapshot with SHA-256 integrity manifest |
-| Delivery | Typed package, CLI, tests, CI, Docker, HTML report, and Streamlit dashboard |
+| Delivery | Typed package, CLI, tests, CI, Docker, release automation, Streamlit, and GitHub Pages |
 
 ## Research flow
 
@@ -98,6 +101,25 @@ atlas-rv compare-models   --provider synthetic   --config configs/universe.yml  
 The signal, thresholds, execution, and costs remain identical. Only the estimator
 changes, making the comparison interpretable.
 
+## Real-data multi-asset stress study
+
+FRED provides public observed series without credentials. The tracked study spans
+equity, rates, credit, FX, crypto, commodity, and volatility relationships:
+
+~~~bash
+atlas-rv research \
+  --provider fred \
+  --config configs/fred_market_study.yml \
+  --start 2021-01-01 \
+  --include-review \
+  --output reports/fred_market_study
+~~~
+
+The **--include-review** flag is intentional here: this is a broad diagnostic stress
+study showing both accepted and rejected hypotheses, not a claim that every sleeve
+is tradable. Several FRED inputs are indices, yields, spreads, or reference levels
+rather than executable total-return instruments.
+
 ## Explore market-data proxies
 
 ~~~bash
@@ -136,6 +158,12 @@ The manifest records shape, symbols, dates, and the exact SHA-256 hash of canoni
 input bytes. A modified snapshot fails integrity validation.
 
 ## Dashboard
+
+The latest public static dashboard is deployed at
+[Louisgsln.github.io/AtlasRV](https://louisgsln.github.io/AtlasRV/). It is rebuilt
+from the current FRED snapshot only after the full validation suite passes.
+
+For the deeper local Streamlit explorer:
 
 ~~~bash
 python -m pip install -e ".[dashboard]"
@@ -183,6 +211,8 @@ The suite covers:
 - [v0.2 design notes](docs/v0.2.md)
 - [Reproducible synthetic results](docs/demo-results.md)
 - [Interview guide](docs/interview-guide.md)
+- [Real-data study protocol](docs/real-data-study/README.md)
+- [GitHub portfolio checklist](docs/github-profile.md)
 
 ## Thirty-second interview pitch
 
